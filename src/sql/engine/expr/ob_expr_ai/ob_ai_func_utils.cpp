@@ -280,10 +280,13 @@ int ObOpenAIUtils::ObOpenAIEmbed::parse_output(common::ObIAllocator &allocator,
           ObIJsonBase *index_node = ObAIFuncJsonUtils::get_value(embedding_obj, "index");
           int64_t index = i;
           if (OB_NOT_NULL(index_node)) {
-            if (index_node->json_type() != ObJsonNodeType::J_INT) {
-              ret = OB_INVALID_DATA;
-            } else {
+            if (index_node->json_type() == ObJsonNodeType::J_INT) {
               index = index_node->get_int();
+            } else if (index_node->json_type() == ObJsonNodeType::J_UINT &&
+                       index_node->get_uint() <= static_cast<uint64_t>(INT64_MAX)) {
+              index = static_cast<int64_t>(index_node->get_uint());
+            } else {
+              ret = OB_INVALID_DATA;
             }
           }
           if (OB_FAIL(ret)) {
